@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Text Sync</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f2f4f7;color:#111}
+.container{max-width:800px;margin:40px auto;padding:20px}
+.card{background:#fff;border-radius:18px;padding:24px;box-shadow:0 6px 25px #0001}
+h1{margin-top:0}
+textarea{width:100%;height:350px;padding:16px;border:1px solid #ccc;border-radius:12px;font-size:17px;resize:vertical}
+button{border:0;border-radius:10px;padding:12px 18px;margin-top:12px;font-size:16px;cursor:pointer}
+#save{background:#111;color:#fff}
+#clear{background:#eee}
+#status{margin-top:12px;font-size:14px;color:#666}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="card">
+<h1>📝 My Text Sync</h1>
+<p>Write on your phone, save it, and open this site on your computer.</p>
+<textarea id="text" placeholder="Type your text here..."></textarea>
+<br>
+<button id="save">Save Online</button>
+<button id="clear">Clear</button>
+<div id="status">Connecting...</div>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAIofTXB7I6mWZXjNT5k1DXe60C2BmpQM",
+  authDomain: "my-text-sync.firebaseapp.com",
+  databaseURL: "https://my-text-sync-default-rtdb.firebaseio.com",
+  projectId: "my-text-sync",
+  storageBucket: "my-text-sync.firebasestorage.app",
+  messagingSenderId: "227196875342",
+  appId: "1:227196875342:web:9659efce6709ec48b0891f",
+  measurementId: "G-QBZLYVD3Q2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const textRef = ref(db, "sharedText");
+
+const textBox = document.getElementById("text");
+const status = document.getElementById("status");
+
+onValue(textRef, (snapshot) => {
+  const value = snapshot.val();
+  if (value !== null && document.activeElement !== textBox) {
+    textBox.value = value;
+  }
+  status.textContent = "🟢 Connected";
+}, (error) => {
+  status.textContent = "🔴 Connection error: " + error.message;
+});
+
+document.getElementById("save").onclick = async () => {
+  try {
+    await set(textRef, textBox.value);
+    status.textContent = "✅ Saved online";
+  } catch (error) {
+    status.textContent = "❌ Save failed: " + error.message;
+  }
+};
+
+document.getElementById("clear").onclick = async () => {
+  textBox.value = "";
+  try {
+    await set(textRef, "");
+    status.textContent = "✅ Cleared";
+  } catch (error) {
+    status.textContent = "❌ Clear failed: " + error.message;
+  }
+};
+</script>
+</body>
+</html>
